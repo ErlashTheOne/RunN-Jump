@@ -11,6 +11,8 @@ namespace _01_Ejemplo_HolaMundo
         const string WALL = "▓";
         const string SKY_SPACE = " ";
         const string FLOOR_SPACE = "_";
+        const string CLOUD = "~";
+
 
         static string prevSky = "  ";
         static string nextSky = "                            ";
@@ -20,6 +22,9 @@ namespace _01_Ejemplo_HolaMundo
         static string topPosition = SKY_SPACE;
         static string bottomPosition = DEFAULT_BLOCK;
         static string backFloorSpace = FLOOR_SPACE;
+        static string backSkySpace = SKY_SPACE;
+
+        static int parallaxCont = 0;
 
 
         static void Main(string[] args)
@@ -54,16 +59,22 @@ namespace _01_Ejemplo_HolaMundo
         }
         static void StartPlaying()
         {
-            int initialSleepTime = 75;
+            //int initialSleepTime = 75; //so slow
+
+            int initialSleepTime = 50;
+
             var rand = new Random();
             int jump = -1;
+            int speedBoost = 0;
+
+            //int point = 0;
 
             bool exit = false;
 
             do
             {
                 TimeSpan Sleep = TimeSpan.FromMilliseconds(initialSleepTime);
-
+                int random = rand.Next(101);
                 while (Console.KeyAvailable)
                 {
                     switch (Console.ReadKey(true).Key)
@@ -88,32 +99,49 @@ namespace _01_Ejemplo_HolaMundo
                     }
                 }
 
-                if (rand.Next(101) < 5)
+                if (random < 5)
                 {
                     WallRender();
                 }
 
+                if (random > 90)
+                {
+                    CloudRender();
+                }
+
                 Thread.Sleep(Sleep);
 
-                if (rand.Next(101) < 3)
+                speedBoost++;
+
+                if(speedBoost == 50)
                 {
                     if (initialSleepTime < 20)
                     {
                         initialSleepTime--;
                     }
+
+                    speedBoost = 0;
                 }
 
-                exit = MoveWalls();
+                exit = HorizontalScroll();
                 RenderGame();
             } while (!exit);
         }
 
         static void WallRender()
         {
-            nextFloor = nextFloor.Substring(1) + WALL;
+            if (nextFloor.Substring(nextFloor.Length - 5).IndexOf(WALL) == -1)
+            {
+                nextFloor = nextFloor.Substring(1) + WALL;
+            }
         }
 
-        static bool MoveWalls()
+        static void CloudRender()
+        {
+            nextSky = nextSky.Substring(1) + CLOUD;
+        }
+
+        static bool HorizontalScroll()
         {
             bool exit = false;
 
@@ -132,6 +160,23 @@ namespace _01_Ejemplo_HolaMundo
                 prevFloor = prevFloor.Substring(1) + backFloorSpace;
                 backFloorSpace = nextFloor.Substring(0, 1);
                 nextFloor = nextFloor.Substring(1) + FLOOR_SPACE;
+
+                if(backFloorSpace == WALL)
+                {
+                    bottomPosition = WALL;
+                }
+
+                if(parallaxCont == 0)
+                {
+                    prevSky = prevSky.Substring(1) + backSkySpace;
+                    backSkySpace = nextSky.Substring(0, 1);
+                    nextSky = nextSky.Substring(1) +SKY_SPACE;
+                }
+                parallaxCont++;
+                if(parallaxCont == 5)
+                {
+                    parallaxCont = 0;
+                }
             }
             return exit;
         }
